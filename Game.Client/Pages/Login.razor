@@ -1,0 +1,106 @@
+﻿@page "/Login"
+@rendermode InteractiveServer
+@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@inject NavigationManager Navigation
+@inject HttpClient Client
+@inject ILocalStorageService _localStorage
+
+<h3>Login</h3>
+
+<EditForm Model="@loginModel" method="post" OnValidSubmit="@HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="Email">Email:</label>
+        <InputText id="Email" class="form-control" @bind-Value="loginModel.Email" />
+        <ValidationMessage For="@(() => loginModel.Email)" />
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <InputText id="password" class="form-control" type="password" @bind-Value="loginModel.Password" />
+        <ValidationMessage For="@(() => loginModel.Password)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private string? Token;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Check if the component is rendering for the first time and a token is available
+        if (firstRender && Token != null)
+        {
+            try
+            {
+                // Store the token in local storage
+                await _localStorage.SetItemAsync("authToken", Token);
+
+                // Retrieve the token to verify it's stored correctly
+                var storedToken = await _localStorage.GetItemAsync<string>("authToken");
+
+                if (storedToken == Token)
+                {
+                    Console.WriteLine("Token stored successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Failed to store the token.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error storing token: {ex.Message}");
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var formData = new MultipartFormDataContent();
+            formData.Add(new StringContent(loginModel.Email), "Email");
+            formData.Add(new StringContent(loginModel.Password), "Password");
+
+            // Send login request
+            var response = await Client.PostAsync(Navigation.BaseUri + "UserLogin", formData);
+
+            // Read the token from the response
+            Token = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Navigate to the welcome page after successful login
+               // Navigation.NavigateTo("/welcome");
+            }
+            else
+            {
+                Console.WriteLine("Login failed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during login: {ex.Message}");
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required]
+        public string Email { get; set; }
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
+    }
+}

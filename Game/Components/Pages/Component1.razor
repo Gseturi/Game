@@ -1,10 +1,9 @@
-﻿@page "/Profile"
+﻿@page "/vaime"
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize]
-
+@using Microsoft.AspNetCore.Components.Authorization
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
-
-
+@inject AuthenticationStateProvider test
+@attribute [Authorize]
 
 <AuthorizeView>      
 
@@ -27,7 +26,7 @@
     {
         if (firstRender)
         {
-           
+            var testt =await test.GetAuthenticationStateAsync();
 
             _isPrerendering = false;
             StateHasChanged();

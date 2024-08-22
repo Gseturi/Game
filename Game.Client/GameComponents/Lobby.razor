@@ -1,0 +1,62 @@
+﻿@page "/GameLobby"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@rendermode @(new InteractiveAutoRenderMode(prerender:false))
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+
+<h3>Lobby</h3>
+
+<AuthorizeView>      
+
+    <Authorized>
+        <button @onclick="ConnectToLobby">ConnectToLobby</button>
+       
+
+    </Authorized>
+   
+</AuthorizeView>
+
+
+
+
+
+
+
+@code {
+    private HubConnection _hubConnection;
+ 
+
+    public async void ConnectToLobby()
+    {
+        _hubConnection = new HubConnectionBuilder().WithUrl(Navigation.BaseUri + "LobyHub").Build();
+
+        try
+        {
+            await _hubConnection.StartAsync();
+          
+        }
+        catch (Exception ex)
+        {
+           
+        }
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+
+
+
+
+
+
+
+        return base.OnInitializedAsync();
+    }
+
+}

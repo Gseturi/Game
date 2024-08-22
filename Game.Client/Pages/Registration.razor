@@ -1,12 +1,13 @@
-﻿@page "/register"
+﻿@page "/Register"
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 @inject NavigationManager Navigation
 @inject HttpClient Client
 
 <h3>Register</h3>
 
-<EditForm Model="@registrationModel" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="@registrationModel" method="post" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -37,30 +38,24 @@
 
 
 @code {
+
+
     private RegistrationModel registrationModel = new RegistrationModel();
+
 
 
     private async Task HandleValidSubmit()
     {
         try
         {
-            Console.WriteLine($"Submitting form for Username: {registrationModel.Username}, Email: {registrationModel.Email}");
-            Navigation.NavigateTo("/");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An error occurred: {ex.Message}");
-        }
-    }
-    /*  private async Task HandleValidSubmit()
-    {
-        try
-        {
+
+            var formData = new MultipartFormDataContent();
+            formData.Add(new StringContent(registrationModel.Username), "Username");
+            formData.Add(new StringContent(registrationModel.Email), "Email");
+            formData.Add(new StringContent(registrationModel.Password), "Password");
 
 
-
-
-            var response = await Client.PostAsJsonAsync(Navigation.BaseUri + "/Registerr", registrationModel);
+            var response = await Client.PostAsync(Navigation.BaseUri + "Registerr", formData);
 
             if (response.IsSuccessStatusCode)
             {
@@ -79,8 +74,8 @@
             // Handle the exception
             Console.WriteLine($"An error occurred: {ex.Message}");
         }
-    }*/
-  
+    }
+
 
     public class RegistrationModel
     {

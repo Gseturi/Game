@@ -23,15 +23,55 @@ class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await _localStorage.GetItemAsync<string>("authToken");
 
-        var identity = string.IsNullOrWhiteSpace(token)
-            ? new ClaimsIdentity()
-            : new ClaimsIdentity(ParseClaimsFromJwt(token), "jwtAuthType");
+        
 
-        var user = new ClaimsPrincipal(identity);
-        return new AuthenticationState(user);
+        try
+        {
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            var identity = string.IsNullOrWhiteSpace(token)
+                ? new ClaimsIdentity()
+                : new ClaimsIdentity(ParseClaimsFromJwt(token), "jwtAuthType");
+
+            var user = new ClaimsPrincipal(identity);
+            return new AuthenticationState(user);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception or handle it
+            Console.WriteLine($"Error in GetAuthenticationStateAsync: {ex.Message}");
+            // Return an empty authentication state or handle as appropriate
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+        }
+        
     }
+
+    public async Task<AuthenticationState> GetAuthenticationStateAsync(string token)
+    {
+
+
+
+        try
+        {
+          
+            var identity = string.IsNullOrWhiteSpace(token)
+                ? new ClaimsIdentity()
+                : new ClaimsIdentity(ParseClaimsFromJwt(token), "jwtAuthType");
+
+            var user = new ClaimsPrincipal(identity);
+            return new AuthenticationState(user);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception or handle it
+            Console.WriteLine($"Error in GetAuthenticationStateAsync: {ex.Message}");
+            // Return an empty authentication state or handle as appropriate
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+        }
+
+    }
+
+
 
     public void MarkUserAsAuthenticated(string token)
     {

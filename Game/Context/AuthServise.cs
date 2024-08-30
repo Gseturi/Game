@@ -35,7 +35,7 @@ namespace Game.Context
                 Console.WriteLine($"Error saving token: {ex.Message}");
             }
          // await _localStorage.SetItemAsync("authToken", token);
-            ((CustomAuthenticationStateProvider)_authenticationStateProvider).MarkUserAsAuthenticated(token);
+            ((ServerAuthenticationStateProvider)_authenticationStateProvider).MarkUserAsAuthenticated(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", token);
 
 
@@ -45,7 +45,7 @@ namespace Game.Context
         public async Task Logout()
         {
             await _localStorage.RemoveItemAsync("authToken");
-            ((CustomAuthenticationStateProvider)_authenticationStateProvider).MarkUserAsLoggedOut();
+            ((ServerAuthenticationStateProvider)_authenticationStateProvider).MarkUserAsLoggedOut();
             _httpClient.DefaultRequestHeaders.Authorization = null;
         }
     }

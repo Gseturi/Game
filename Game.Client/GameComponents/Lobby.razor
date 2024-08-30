@@ -1,10 +1,11 @@
 ﻿@page "/GameLobby"
+@using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @rendermode @(new InteractiveAutoRenderMode(prerender:false))
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
-
+@inject ILocalStorageService _localStorage
 <h3>Lobby</h3>
 
 <AuthorizeView>      
@@ -12,7 +13,13 @@
     <Authorized>
         <button @onclick="ConnectToLobby">ConnectToLobby</button>
        
-
+        <button @onclick="Refresh">Refresh</button>
+        <div>
+        @foreach(string a in PlayerNames)
+        {
+                <button @onclick="()=>Challenge(a)">@a</button>
+        }
+        </div>
     </Authorized>
    
 </AuthorizeView>
@@ -25,21 +32,61 @@
 
 @code {
     private HubConnection _hubConnection;
- 
+    private List<string> PlayerNames=new List<string>();
 
-    public async void ConnectToLobby()
+    public async void Challenge(string name)
     {
-        _hubConnection = new HubConnectionBuilder().WithUrl(Navigation.BaseUri + "LobyHub").Build();
+        Console.Write(name);
+    }
 
-        try
+
+    public async void Refresh()
+    {
+
+        if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
         {
+            var players = await _hubConnection.InvokeAsync<List<string>>("GetAllPlayers");
+            Console.WriteLine("Players: " + string.Join(", ", players));
+            PlayerNames = players;
+        }
+
+
+    }
+
+
+    public async void ConnectToLobby(){
+
+       
+        _hubConnection = new HubConnectionBuilder()
+        .WithUrl(Navigation.BaseUri + "LobyHub", options =>
+        {
+            options.AccessTokenProvider = async () =>
+            {
+                return await _localStorage.GetItemAsync<string>("authToken");
+            };
+        })
+        .Build();
+        try
+        {   
+            Console.WriteLine("mach");
             await _hubConnection.StartAsync();
-          
+
         }
         catch (Exception ex)
         {
-           
+
         }
+
+        _hubConnection.On<string, string>("ReceiveMatchRequest", (Sender, Destination) =>
+        {
+
+
+
+
+
+        });
+
+
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
@@ -49,14 +96,28 @@
 
     protected override Task OnInitializedAsync()
     {
+     
+
+        /*_hubConnection.On<string,string>("ReceiveMatchRequest", (Sender, Destination) => {
+
+
+
+
+
+          });*/
+
+
+
+
+        return Task.CompletedTask;
+    }        
 
 
 
 
 
 
-
-        return base.OnInitializedAsync();
+   
     }
 
 }

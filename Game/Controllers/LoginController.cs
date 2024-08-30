@@ -16,10 +16,10 @@ namespace Game.Controllers
         SignInManager<AppUser> _signInManager;
         UserManager<AppUser> _userManager;
         AuthService _authService;
-        TokenHolder _tokenHolder;
-        public LoginController(TokenHolder tokenHolder,AuthService authService,SignInManager<AppUser> signInManager,UserManager<AppUser> userManager)
+
+        public LoginController(AuthService authService,SignInManager<AppUser> signInManager,UserManager<AppUser> userManager)
         {   
-            _tokenHolder = tokenHolder;
+            
             _authService = authService;
             _signInManager = signInManager;
             _userManager = userManager;
@@ -45,7 +45,7 @@ namespace Game.Controllers
                 {
                    
                     var token = GenerateJwtToken(user);
-                    _tokenHolder.Token = token;
+                  
                     bool dec = await _authService.Login(token);
                     if (dec)
                     {
@@ -75,7 +75,9 @@ namespace Game.Controllers
             var claims = new[]
             {
             new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            //add Roles to this
+            new Claim(ClaimTypes.Role, "PLayer")
         };
 
             var token = new JwtSecurityToken(

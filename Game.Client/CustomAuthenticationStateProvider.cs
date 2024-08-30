@@ -1,21 +1,17 @@
-﻿
-
-
-
-using Blazored.LocalStorage;
+﻿using Blazored.LocalStorage;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Json;
 
-class ServerAuthenticationStateProvider : AuthenticationStateProvider
+class CustomAuthenticationStateProviderr : AuthenticationStateProvider
 {
 
     private readonly ILocalStorageService _localStorage;
     private readonly HttpClient _httpClient;
 
-    public ServerAuthenticationStateProvider(ILocalStorageService localStorage, HttpClient httpClient)
+    public CustomAuthenticationStateProviderr(ILocalStorageService localStorage, HttpClient httpClient)
     {
         _localStorage = localStorage;
         _httpClient = httpClient;
@@ -24,8 +20,8 @@ class ServerAuthenticationStateProvider : AuthenticationStateProvider
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
 
-        
-        //machikela
+
+
         try
         {
             var token = await _localStorage.GetItemAsync<string>("authToken");
@@ -43,26 +39,7 @@ class ServerAuthenticationStateProvider : AuthenticationStateProvider
             // Return an empty authentication state or handle as appropriate
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
-        
-    }
 
-
-
-
-    public void MarkUserAsAuthenticated(string token)
-    {
-        var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwtAuthType");
-        var user = new ClaimsPrincipal(identity);
-
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
-    }
-
-    public void MarkUserAsLoggedOut()
-    {
-        var identity = new ClaimsIdentity();
-        var user = new ClaimsPrincipal(identity);
-
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
     }
 
     private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)

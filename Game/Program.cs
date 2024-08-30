@@ -21,7 +21,7 @@ builder.Services.AddAntiforgery();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer("Server=WINDOWS-NJ9LCT3;Database=GameUserDataBase;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"));
 
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient();
@@ -108,12 +108,12 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-app.UseRouting(); // Set up routing first
+app.UseRouting(); 
 
-app.UseAuthentication(); // Authentication should be configured before Authorization
-app.UseAuthorization();  // This is the key middleware that needs to be added and correctly placed
+app.UseAuthentication(); 
+app.UseAuthorization(); 
 
-// If you are using Anti-Forgery, it should go here
+
 app.UseAntiforgery();
 
 

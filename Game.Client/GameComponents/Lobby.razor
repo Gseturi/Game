@@ -1,12 +1,19 @@
 ﻿@page "/GameLobby"
+@using Blazor.Extensions.Canvas
 @using Blazored.LocalStorage
+@using Game.Client.GameComponents.Sprites
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @rendermode @(new InteractiveAutoRenderMode(prerender:false))
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
 @inject ILocalStorageService _localStorage
+@inject IJSRuntime JS
+@using Blazor.Extensions
+@using Blazor.Extensions.Canvas.Canvas2D
+
 <h3>Lobby</h3>
+<img @ref="_BackGround" hidden src="C:\Users\User\source\repos\Game\Game.Client\GameComponents\Sprites\BackGround.jpg" />
 
 <AuthorizeView>      
 
@@ -20,26 +27,71 @@
                 <button @onclick="()=>Challenge(a)">@a</button>
         }
         </div>
+
+
+        <div>
+
+            @foreach (string name in RequestNames)
+            {
+                <button @onclick="()=>AcceptAMatch(name)">@name</button>
+            }
+
+
+        </div>
+
+
+
     </Authorized>
    
 </AuthorizeView>
 
-
-
-
-
-
+@if (InMatch)
+{
+    
+ <div id="canvasContainer" style="position: fixed; opacity: 1; background-color: black; width: 50%; height: 50%">
+        <BECanvas @ref="_canvas"></BECanvas>
+ </div>
+}
 
 @code {
     private HubConnection _hubConnection;
     private List<string> PlayerNames=new List<string>();
+    private List<string> RequestNames = new List<string>();
+
+    bool InMatch=false;
+    ElementReference _BackGround;
+
+    BECanvasComponent _canvas = null;
+    Canvas2DContext _outputCanvasContext;
+
 
     public async void Challenge(string name)
     {
-        Console.Write(name);
+
+        await _hubConnection.InvokeAsync("RequestAMatch",name);
     }
 
+    public async void AcceptAMatch(string name)
+    {
+        InMatch = true;
 
+
+        await InvokeAsync(StateHasChanged);
+        await _hubConnection.InvokeAsync("AcceptAMatch", name);
+
+        if (_canvas != null)
+        {
+            _outputCanvasContext = await _canvas.CreateCanvas2DAsync();
+            await JS.InvokeVoidAsync("initGame", DotNetObjectReference.Create(this));
+        }
+        else
+        {
+
+        }
+
+
+
+    }
     public async void Refresh()
     {
 
@@ -53,10 +105,41 @@
 
     }
 
+    [JSInvokable]
+    public async ValueTask GameLoop(float timeStamp)
+    {
+        //,int ScreenWidh,int ScreenHeight
+
+        await Update();
+        await Render();
+
+
+    }
+
+    private async ValueTask Update()
+    {
+
+    }
+
+    private async ValueTask Render()
+    {
+
+        try{
+            await _outputCanvasContext.DrawImageAsync(_BackGround, 0, 0);
+        }
+        catch (Exception)
+        {
+
+        }
+
+
+
+    }
+
 
     public async void ConnectToLobby(){
 
-       
+
         _hubConnection = new HubConnectionBuilder()
         .WithUrl(Navigation.BaseUri + "LobyHub", options =>
         {
@@ -77,47 +160,41 @@
 
         }
 
-        _hubConnection.On<string, string>("ReceiveMatchRequest", (Sender, Destination) =>
+        _hubConnection.On<string>("ReceiveMatchRequest", (Sender) =>
         {
 
+            RequestNames.Add(Sender);
+            StateHasChanged();
 
 
+        });
+        _hubConnection.On<string>("RequestAccepted", (Sender) =>
+        {
 
 
         });
 
-
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        return base.OnAfterRenderAsync(firstRender);
+        if (!firstRender)
+            return;
+
+
+
+
     }
 
     protected override Task OnInitializedAsync()
     {
-     
-
-        /*_hubConnection.On<string,string>("ReceiveMatchRequest", (Sender, Destination) => {
-
-
-
-
-
-          });*/
-
-
-
+        Sprite BackGround = new Sprite();
+        BackGround.SpriteSheet = _BackGround;
 
         return Task.CompletedTask;
     }        
 
-
-
-
-
-
-   
-    }
+  
+}
 
 }

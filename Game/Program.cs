@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
+using Game.HUbs;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -20,11 +21,10 @@ builder.Services.AddAntiforgery();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer("Server=WINDOWS-NJ9LCT3;Database=GameUserDataBase;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"));
 
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<TokenHolder>();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -35,7 +35,6 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredLength = 6;
     options.Password.RequiredUniqueChars = 1;
 });
-
 
 
 
@@ -63,11 +62,27 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = "https://localhost:7195/",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("wJnGzW5oGzStbHj2ZxTrkCvJ8xRhfLt2NzDpPv9rZtQ="))
     };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError("Authentication failed.", context.Exception);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Token validated successfully.");
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
-
+builder.Services.AddCascadingAuthenticationState();
 
 
 builder.Services.AddSignalR();
@@ -90,16 +105,25 @@ else
 
 
 
-
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
+
+app.UseRouting(); 
+
+app.UseAuthentication(); 
+app.UseAuthorization(); 
+
+
 app.UseAntiforgery();
+
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Game.Client._Imports).Assembly);
+
+app.MapHub<GameHub>("/Game");
+app.MapHub<lobbyHub>("/LobyHub");
 
 app.MapControllers();
 

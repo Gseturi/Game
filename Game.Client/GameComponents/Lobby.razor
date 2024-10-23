@@ -1,19 +1,25 @@
 ﻿@page "/GameLobby"
 @using Blazor.Extensions.Canvas
 @using Blazored.LocalStorage
-@using Game.Client.GameComponents.Sprites
+@using Game.Client.GameComponents.Classes.Sprites
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
-@rendermode @(new InteractiveAutoRenderMode(prerender:false))
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
 @inject ILocalStorageService _localStorage
 @inject IJSRuntime JS
 @using Blazor.Extensions
 @using Blazor.Extensions.Canvas.Canvas2D
+@using Game.Client.GameComponents.Classes
+@inject HttpClient Client
+@inject IAssetsResolver _resolver
 
+
+
+<AssetLoader Source="Sprites/SpritesList.json"></AssetLoader>
 <h3>Lobby</h3>
-<img @ref="_BackGround" hidden src="C:\Users\User\source\repos\Game\Game.Client\GameComponents\Sprites\BackGround.jpg" />
 
 <AuthorizeView>      
 
@@ -47,22 +53,37 @@
 
 @if (InMatch)
 {
-    
- <div id="canvasContainer" style="position: fixed; opacity: 1; background-color: black; width: 50%; height: 50%">
+   
+    <div id="canvasContainer" style="position: fixed; opacity: 1; background-color: black; width: 50%; height: 50%">
         <BECanvas @ref="_canvas"></BECanvas>
- </div>
+    </div>
 }
 
 @code {
+
     private HubConnection _hubConnection;
     private List<string> PlayerNames=new List<string>();
     private List<string> RequestNames = new List<string>();
 
+    protected InputSystem inputSystem;
+
     bool InMatch=false;
     ElementReference _BackGround;
-
+    ElementReference _PlayerOne;
+    ElementReference _PlayerTwo;
     BECanvasComponent _canvas = null;
     Canvas2DContext _outputCanvasContext;
+
+  
+    bool decider = false;
+    ElementReference _CurrentPlayer;
+    ElementReference _Oponent;
+    int _x=500;
+    int _y = 0;
+
+    int xx = 100;
+    int yy = 100;
+
 
 
     public async void Challenge(string name)
@@ -76,6 +97,10 @@
         InMatch = true;
 
 
+        //  _CurrentPlayer = _PlayerTwo;
+        //   _Oponent = _PlayerOne;
+        _CurrentPlayer = _PlayerOne;
+        _Oponent = _PlayerTwo;
         await InvokeAsync(StateHasChanged);
         await _hubConnection.InvokeAsync("AcceptAMatch", name);
 
@@ -92,6 +117,26 @@
 
 
     }
+    public async void MatchStart()
+    {
+        InMatch = true;
+
+        // var machplayer = _resolver.Get<Sprite>("Sprites/MachaPlayer.png");
+        // var gurplayer=_resolver.Get<Sprite>("Sprites/PlayerGuram.png");
+
+        _CurrentPlayer = _PlayerTwo;
+        _Oponent = _PlayerOne;
+
+        await InvokeAsync(StateHasChanged);
+        if (_canvas != null)
+        {
+            _outputCanvasContext = await _canvas.CreateCanvas2DAsync();
+            await JS.InvokeVoidAsync("initGame", DotNetObjectReference.Create(this));
+        }
+        await InvokeAsync(StateHasChanged);
+
+    }
+
     public async void Refresh()
     {
 
@@ -100,32 +145,130 @@
             var players = await _hubConnection.InvokeAsync<List<string>>("GetAllPlayers");
             Console.WriteLine("Players: " + string.Join(", ", players));
             PlayerNames = players;
+            await InvokeAsync(StateHasChanged);
         }
 
 
     }
 
-    [JSInvokable]
-    public async ValueTask GameLoop(float timeStamp)
+    [JSInvokable("GameLoop")]
+    public async ValueTask GameLoop(float timeStamp, int ScreenWidh, int ScreenHeight)
     {
         //,int ScreenWidh,int ScreenHeight
-
+        inputSystem = InputSystem.Instance;
         await Update();
-        await Render();
-
+        await Render(ScreenWidh, ScreenHeight);
+        await InvokeAsync(StateHasChanged);
 
     }
 
-    private async ValueTask Update()
+    [JSInvokable]
+    public async ValueTask KeyDown(int keyCode)
     {
 
+        int keyvalue = 1;
+        // await _resolver.Load<Sprite>("Sprites/MachaPlayer.png");
+        // var machplayer = _resolver.Get<Sprite>("Sprites/MachaPlayer.png");
+      //  _BackGround = _resolver.Get<Sprite>("Sprites/temp.png").Source;
+        //_PlayerOne = _resolver.Get<Sprite>("Sprites/MachaPlayer.png").Source;
+        //_PlayerTwo = _resolver.Get<Sprite>("Sprites/PlayerGuram.png").Source;
+
+        inputSystem.SetKeyState((Keys)keyCode, (ButtonState.States)keyvalue);
+
     }
 
-    private async ValueTask Render()
+
+    [JSInvokable]
+    public async ValueTask KeyUp(int keyCode)
+    {   
+
+        int keyvalue =0;
+        inputSystem.SetKeyState((Keys)keyCode, (ButtonState.States)keyvalue);
+    }
+    private async ValueTask Update()
+    {   
+        int keyvalue = 1;
+        /*if (inputSystem.GetKeyState((Keys)Keys.Right).State==(ButtonState.States)1)
+        {
+        x = x + 1;
+
+        }
+        if (inputSystem.GetKeyState((Keys)Keys.Left).State == (ButtonState.States)1)
+        {
+        x = x - 1;
+
+        }
+        if (inputSystem.GetKeyState((Keys)Keys.Up).State == (ButtonState.States)1)
+        {
+        y = y - 1;
+        }
+        if (inputSystem.GetKeyState((Keys)Keys.Down).State == (ButtonState.States)1)
+            {
+            y = y + 1;
+
+        }*/
+        if (_CurrentPlayer.Equals(_PlayerOne))
+        {
+
+            if (inputSystem.GetKeyState((Keys)Keys.Right).State == (ButtonState.States)1)
+            {
+                xx = xx + 1;
+
+            }
+            if (inputSystem.GetKeyState((Keys)Keys.Left).State == (ButtonState.States)1)
+            {
+                xx = xx - 1;
+
+            }
+            if (inputSystem.GetKeyState((Keys)Keys.Up).State == (ButtonState.States)1)
+            {
+                yy = yy - 1;
+            }
+            if (inputSystem.GetKeyState((Keys)Keys.Down).State == (ButtonState.States)1)
+            {
+                yy = yy + 1;
+
+            }
+            await _hubConnection.InvokeAsync("Send", xx, yy);
+        }
+        else if(_CurrentPlayer.Equals(_PlayerTwo))
+        {
+            if (inputSystem.GetKeyState((Keys)Keys.Right).State == (ButtonState.States)1)
+            {
+                _x = _x + 1;
+
+            }
+            if (inputSystem.GetKeyState((Keys)Keys.Left).State == (ButtonState.States)1)
+            {
+                _x = _x - 1;
+
+            }
+            if (inputSystem.GetKeyState((Keys)Keys.Up).State == (ButtonState.States)1)
+            {
+                _y = _y - 1;
+            }
+            if (inputSystem.GetKeyState((Keys)Keys.Down).State == (ButtonState.States)1)
+            {
+                _y = _y + 1;
+
+            }
+            await _hubConnection.InvokeAsync("Send", _x, _y);
+        }
+
+
+    }
+    private async ValueTask Render(int ScreenWidh, int ScreenHeight)
     {
 
         try{
-            await _outputCanvasContext.DrawImageAsync(_BackGround, 0, 0);
+
+            // await _outputCanvasContext.DrawImageAsync(_BackGround, 100, 100);
+            await _outputCanvasContext.ClearRectAsync(0, 0, ScreenWidh, ScreenHeight);
+            await _outputCanvasContext.DrawImageAsync(_BackGround, 0, 0, ScreenWidh / 2, ScreenHeight / 2);
+            await _outputCanvasContext.DrawImageAsync(_PlayerOne, _x, _y, ScreenWidh / 10, ScreenHeight / 10);
+            await _outputCanvasContext.DrawImageAsync(_PlayerTwo, xx, yy, ScreenWidh / 10, ScreenHeight / 10);
+            await InvokeAsync(StateHasChanged);
+
         }
         catch (Exception)
         {
@@ -137,64 +280,117 @@
     }
 
 
-    public async void ConnectToLobby(){
+    public async Task ConnectToLobby()
+    {   
 
+        _BackGround = _resolver.Get<Sprite>("Sprites/temp.png").Source;
+        _PlayerOne = _resolver.Get<Sprite>("Sprites/MachaPlayer.png").Source;
+        _PlayerTwo = _resolver.Get<Sprite>("Sprites/PlayerGuram.png").Source;
 
-        _hubConnection = new HubConnectionBuilder()
-        .WithUrl(Navigation.BaseUri + "LobyHub", options =>
-        {
-            options.AccessTokenProvider = async () =>
-            {
-                return await _localStorage.GetItemAsync<string>("authToken");
-            };
-        })
-        .Build();
         try
-        {   
-            Console.WriteLine("mach");
-            await _hubConnection.StartAsync();
+        {
+            if (decider)
+            {
+                //var token= await Client.GetAsync(Navigation.BaseUri + "GetToken");
+                var temp = await _localStorage.GetItemAsync<string>("authToken");
+                Console.Write(temp);
 
+                _hubConnection = new HubConnectionBuilder()
+                 .WithUrl(Navigation.BaseUri + "LobyHub", options =>
+                 {
+                     options.AccessTokenProvider = async () =>
+                     {
+                         var token = await _localStorage.GetItemAsync<string>("authToken");
+                         Console.WriteLine($"AccessTokenProvider retrieved token: {token}");
+                         return token;
+                     };
+                 })
+                 .Build();
+                try
+                {
+                    Console.WriteLine("mach");
+                    await _hubConnection.StartAsync();
+
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                _hubConnection.On<string>("ReceiveMatchRequest", async (Sender) =>
+                {
+
+                    RequestNames.Add(Sender);
+                    await InvokeAsync(StateHasChanged);
+
+
+                });
+                _hubConnection.On<string>("RequestAccepted", async (Sender) =>
+                {
+                    MatchStart();
+                    await InvokeAsync(StateHasChanged);
+                });
+                _hubConnection.On<int, int>("InfoRecived", async (x, y) =>
+                {
+
+                    try
+                    {
+                        Console.WriteLine("Braapchhh");
+                        if (_CurrentPlayer.Equals(_PlayerOne))
+                        {
+                            this._x = x;
+                            this._y = y;
+                        }
+                        else
+                        {
+                            if (this._x == this.xx && this._y == this.yy)
+                            {
+
+                            }
+
+
+
+                            this.xx = x;
+                            this.yy = y;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error in event handler: {ex.Message}");
+                    }
+
+                });
+            }
         }
         catch (Exception ex)
         {
 
         }
-
-        _hubConnection.On<string>("ReceiveMatchRequest", (Sender) =>
-        {
-
-            RequestNames.Add(Sender);
-            StateHasChanged();
-
-
-        });
-        _hubConnection.On<string>("RequestAccepted", (Sender) =>
-        {
-
-
-        });
-
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
-            return;
+        decider = firstRender;
+        if (firstRender)
+        {
+        }
+
+        return;
 
 
 
 
     }
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        Sprite BackGround = new Sprite();
-        BackGround.SpriteSheet = _BackGround;
-
-        return Task.CompletedTask;
-    }        
+     //  await _resolver.Load<Sprite>("Sprites/MachaPlayer.png");
+     //  await _resolver.Load<Sprite>("Sprites/PlayerGuram.png");
 
   
+    }        
+
+    
 }
 
 }

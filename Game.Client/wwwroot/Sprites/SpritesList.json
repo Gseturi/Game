@@ -1,0 +1,14 @@
+[
+  {
+    "path": "Sprites/MachaPlayer.png",
+    "type": "sprite"
+  },
+  {
+    "path": "Sprites/PlayerGuram.png",
+    "type": "sprite"
+  },
+  {
+    "path": "Sprites/temp.png",
+    "type": "sprite"
+  }
+]

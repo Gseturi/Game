@@ -1,6 +1,5 @@
 ﻿@page "/Login"
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
-
 @using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Components.Forms
 @using System.ComponentModel.DataAnnotations
@@ -35,67 +34,82 @@
 @code {
     private LoginModel loginModel = new LoginModel();
     private string? Token;
-
+    private bool Decider;
     /*protected override async Task OnAfterRenderAsync(bool firstRender)
     {
     // Check if the component is rendering for the first time and a token is available
-            if (firstRender && Token != null)
-            {
-            try
-            {
-            // Store the token in local storage
-            await _localStorage.SetItemAsync("authToken", Token);
+    if (firstRender && Token != null)
+    {
+    try
+    {
+    // Store the token in local storage
+    await _localStorage.SetItemAsync("authToken", Token);
 
-            // Retrieve the token to verify it's stored correctly
-            var storedToken = await _localStorage.GetItemAsync<string>("authToken");
+    // Retrieve the token to verify it's stored correctly
+    var storedToken = await _localStorage.GetItemAsync<string>("authToken");
 
-            if (storedToken == Token)
-            {
-                Console.WriteLine("Token stored successfully.");
-                }
-                else
-                {
-                Console.WriteLine("Failed to store the token.");
+        if (storedToken == Token)
+        {
+        Console.WriteLine("Token stored successfully.");
         }
-        }
-            catch (Exception ex)
-            {
-            Console.WriteLine($"Error storing token: {ex.Message}");
+        else
+        {
+        Console.WriteLine("Failed to store the token.");
+    }
+    }
+    catch (Exception ex)
+    {
+    Console.WriteLine($"Error storing token: {ex.Message}");
     }
     }
 
     await base.OnAfterRenderAsync(firstRender);
      }*/
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender==true) {
+            Decider = firstRender;
+
+        }
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+  
 
 
     private async Task HandleLogin()
     {
         try
         {
-            var formData = new MultipartFormDataContent();
-            formData.Add(new StringContent(loginModel.Email), "Email");
-            formData.Add(new StringContent(loginModel.Password), "Password");
+            if (Decider) {
+               
+                var formData = new MultipartFormDataContent();
+                formData.Add(new StringContent(loginModel.Email), "Email");
+                formData.Add(new StringContent(loginModel.Password), "Password");
 
-            // Send login request
-            var response = await Client.PostAsync(Navigation.BaseUri + "UserLogin", formData);
+                // Send login request
+                var response = await Client.PostAsync(Navigation.BaseUri + "UserLogin", formData);
 
-            // Read the token from the response
-            Token = await response.Content.ReadAsStringAsync();
+                // Read the token from the response
+                Token = await response.Content.ReadAsStringAsync();
 
-            await _localStorage.SetItemAsync("authToken", Token);
-            if (await _localStorage.GetItemAsync<string>("authToken") == Token && response.IsSuccessStatusCode)
-            {
-                Navigation.NavigateTo(Navigation.BaseUri + "welcome");
-            }
-            else
-            {
-                Console.WriteLine("Login failed.");
-            }
+                await _localStorage.SetItemAsync("authToken", Token);
+                if (await _localStorage.GetItemAsync<string>("authToken") == Token && response.IsSuccessStatusCode)
+                {
+                    Navigation.NavigateTo(Navigation.BaseUri + "welcome");
+                }
+                else
+                {
+                    Console.WriteLine("Login failed.");
+                }
+                }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error during login: {ex.Message}");
         }
+
     }
 
     public class LoginModel

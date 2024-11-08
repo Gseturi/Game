@@ -74,7 +74,7 @@
     BECanvasComponent _canvas = null;
     Canvas2DContext _outputCanvasContext;
 
-  
+
     bool decider = false;
     ElementReference _CurrentPlayer;
     ElementReference _Oponent;
@@ -169,7 +169,7 @@
         int keyvalue = 1;
         // await _resolver.Load<Sprite>("Sprites/MachaPlayer.png");
         // var machplayer = _resolver.Get<Sprite>("Sprites/MachaPlayer.png");
-      //  _BackGround = _resolver.Get<Sprite>("Sprites/temp.png").Source;
+        //  _BackGround = _resolver.Get<Sprite>("Sprites/temp.png").Source;
         //_PlayerOne = _resolver.Get<Sprite>("Sprites/MachaPlayer.png").Source;
         //_PlayerTwo = _resolver.Get<Sprite>("Sprites/PlayerGuram.png").Source;
 
@@ -381,6 +381,15 @@
 
 
     }
+
+    public async ValueTask StartGame()
+    {
+        var _game = await Gameinstance.Create(_outputCanvasContext,_resolver,_hubConnection);
+        
+
+
+    }
+
 
     protected override async Task OnInitializedAsync()
     {

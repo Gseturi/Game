@@ -11,6 +11,7 @@ namespace Game.Client.GameComponents.Classes
 
         private readonly IList<GameObject> _children;
 
+
         public GameObject()
         {
             this.Id = ++_lastId;

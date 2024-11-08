@@ -29,24 +29,17 @@ namespace Game.Client.GameComponents.Classes
             _lastMilliseconds = _stopwatch.ElapsedMilliseconds;
         }
 
-        /// <summary>
-        /// total time elapsed since the beginning of the game, in ticks
-        /// </summary>
+ 
         public long TotalTicks => _stopwatch.ElapsedTicks;
 
-        /// <summary>
-        /// total time elapsed since the beginning of the game, in milliseconds
-        /// </summary>
+     
+     
         public long TotalMilliseconds => _stopwatch.ElapsedMilliseconds;
 
-        /// <summary>
-        /// time elapsed since last frame, in ticks
-        /// </summary>
+        
         public long ElapsedTicks => _elapsedTicks;
 
-        /// <summary>
-        /// time elapsed since last frame, in milliseconds
-        /// </summary>
+       
         public long ElapsedMilliseconds => _elapsedMilliseconds;
 
     }

@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.JSInterop;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.NetworkInformation;
 using System.Security.Claims;
 using System.Text;
+using Blazored.LocalStorage;
 
 namespace Game.Controllers
 {
@@ -16,16 +19,26 @@ namespace Game.Controllers
         SignInManager<AppUser> _signInManager;
         UserManager<AppUser> _userManager;
         AuthService _authService;
-
-        public LoginController(AuthService authService,SignInManager<AppUser> signInManager,UserManager<AppUser> userManager)
-        {   
-            
+        ILocalStorageService _localStorage;
+        public LoginController(ILocalStorageService localStorage, AuthService authService, SignInManager<AppUser> signInManager, UserManager<AppUser> userManager)
+        {
+            _localStorage = localStorage;
             _authService = authService;
             _signInManager = signInManager;
             _userManager = userManager;
 
         }
-       
+        [HttpGet("/GetToken")]
+        public async Task<string> GetToken()
+        {
+            try
+            {
+                string token = await _localStorage.GetItemAsync<string>("authToken");
+
+                return token;
+            } catch (Exception ex) { }
+            return null;
+        }
 
         [HttpPost("/UserLogin")]
         public async Task<IActionResult> Login([FromForm] LoginModel model)

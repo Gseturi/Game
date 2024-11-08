@@ -27,6 +27,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
     <ProjectReference Include="..\Game.Client\Game.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.7" />
@@ -47,6 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\Game.Client\GameComponents\AssetLoader.razor" Link="AssetLoader.razor" />
     <None Include="..\Game.Client\GameComponents\Canvas.razor" Link="Canvas.razor" />
     <None Include="wwwroot\Js\GameLogic.js" />
   </ItemGroup>

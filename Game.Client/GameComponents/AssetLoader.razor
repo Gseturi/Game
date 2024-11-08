@@ -1,0 +1,90 @@
+@using Game.Client.GameComponents.Classes.Sprites
+@using Microsoft.Extensions.Logging
+@using System.Diagnostics
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject HttpClient Http
+@inject IAssetsResolver AssetsResolver
+
+ <div>
+    @foreach (var item in _items)
+    {
+        @_renderers[item.Item1.GetType()](item.Item1, item.Item2)
+    }
+</div> 
+
+@code{
+
+
+    [Parameter]
+    public string Source { get; set; }
+
+    
+   // [Parameter]
+    //public bool IsLoaded { get; set; }
+
+   // [Parameter]
+  //  public EventCallback<bool> IsLoadedChanged { get; set; }
+
+    private readonly List<Tuple<IAsset, AssetData>> _items = new List<Tuple<IAsset, AssetData>>();
+
+    private readonly Dictionary<Type, Func<IAsset, AssetData, RenderFragment>> _renderers = new Dictionary<Type, Func<IAsset, AssetData, RenderFragment>>()
+    {
+        { typeof(Sprite), (a, d) => {
+            var sprite = a as Sprite;
+            var base64 = Convert.ToBase64String(sprite.Data);
+            var src = $"data:image/{sprite.Format};base64,{base64}";
+            return @<img @ref="sprite.Source" src="@src" hidden />;
+            }
+        }
+    };
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var stopwatch = Stopwatch.StartNew();
+       
+        var items = await Http.GetFromJsonAsync<AssetData[]>(this.Source);
+       
+       
+        foreach (var item in items)
+        {
+
+            
+            if (item.type == "sprite")
+            {
+                Console.WriteLine(item.path);
+             
+                IAsset asset = null;
+            asset= await AssetsResolver.Load<Sprite>(item.path);
+
+                if (null != asset) {
+                     _items.Add(new Tuple<IAsset, AssetData>(asset, item));
+                    }
+
+            }
+
+           
+        }
+        stopwatch.Stop();
+        Console.WriteLine($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
+      
+      //  IsLoaded = true;
+      // await IsLoadedChanged.InvokeAsync(true);
+       // await InvokeAsync(() => OnLoaded.InvokeAsync());
+
+
+
+    }
+
+
+
+
+
+    internal class AssetData
+    {
+        public string path { get; set; }
+        public string type { get; set; }
+    }
+
+}

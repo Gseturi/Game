@@ -7,6 +7,6 @@ namespace Game.Client.GameComponents.Interfaces
     {
 
 
-        ValueTask Render(GameContext game, Canvas2DContext context);
+         ValueTask Render(GameContext game, Canvas2DContext context);
     }
 }

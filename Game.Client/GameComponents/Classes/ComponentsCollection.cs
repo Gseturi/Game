@@ -1,4 +1,6 @@
 ﻿using Game.Client.GameComponents.Classes;
+using Game.Client.GameComponents.Classes.Components;
+using Microsoft.AspNetCore.SignalR.Client;
 using System.Collections;
 using System.Reflection;
 
@@ -17,6 +19,24 @@ namespace Game.Client.GameComponents.Classes
             var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new[] { typeof(GameObject) }, null);
             return ctor.Invoke(new[] { owner }) as TC;
         }
+
+        public TC Create<TC>(GameObject owner, params object[] additionalParams) where TC : class, IComponent
+        {
+            var type = typeof(TC);
+
+            
+            var paramTypes = new[] { typeof(GameObject) }.Concat(additionalParams.Select(p => p.GetType())).ToArray();
+
+            
+            var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, paramTypes, null);
+
+            
+            var allParams = new object[] { owner }.Concat(additionalParams).ToArray();
+
+            
+            return ctor?.Invoke(allParams) as TC;
+        }
+
     }
 
     public class ComponentsCollection : IEnumerable<IComponent>
@@ -51,7 +71,15 @@ namespace Game.Client.GameComponents.Classes
 
             return _items[type] as TC;
         }
-
+        public void AddReciverHUb(HubConnection connection)
+        {
+            if (!_items.ContainsKey(typeof(HubReciver)))
+            {
+                var hold = ComponentsFactory.Instance.Create<HubReciver>(_owner, connection);
+                _items[typeof(HubReciver)] = hold;
+                
+            }
+        }
         public T Get<T>() where T : class, IComponent
         {
             var type = typeof(T);

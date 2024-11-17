@@ -15,7 +15,7 @@ namespace Game.Client.GameComponents.Classes
             }
 
             this.GameTime.Step();
-
+          
             await Update();
             await Render();
         }

@@ -40,6 +40,7 @@ namespace Game.Client.GameComponents.Classes
         public async ValueTask Update(GameContext game)
         {
             foreach (var component in this.Components)
+               
                 await component.Update(game);
 
             foreach (var child in _children)

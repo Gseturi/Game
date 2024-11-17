@@ -8,7 +8,7 @@ namespace Game.Client.GameComponents.Interfaces
      interface Ihubable
     {
 
-        ValueTask Update(GameContext game, HubConnection hubConnection);
+      ValueTask Update(GameContext game);
 
     }
 }

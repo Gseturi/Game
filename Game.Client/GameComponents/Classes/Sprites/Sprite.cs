@@ -19,7 +19,7 @@ namespace Game.Client.GameComponents.Classes.Sprites
 
         public string Name { get; }
         public ElementReference Source { get; set; }
-        public Size Size { get; }
+        public Size Size { get; set; }
         public byte[] Data { get; }
         public ImageFormat Format { get; }
         public Point Origin { get; set; }

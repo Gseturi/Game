@@ -6,16 +6,15 @@
         instance: instance,
         canvas: canvases.length ? canvases[0] : null
     };
-    console.log("machikela");
-
+   
 
     window.game.canvas.setAttribute("tabindex", "0"); // Make sure the canvas is focusable
     window.game.canvas.focus();
 
     if (window.game.canvas) {
-        console.log("shevida");
+       
         window.game.canvas.addEventListener('keydown', (e) => {
-            console.log("keydown");
+           
             game.instance.invokeMethodAsync("KeyDown", e.keyCode); // Or use e.key
         });
 

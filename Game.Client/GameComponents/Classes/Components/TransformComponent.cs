@@ -2,10 +2,10 @@
 
 namespace Game.Client.GameComponents.Classes.Components
 {
-    public class TransformComponent : BaseComponent
+    internal class TransformComponent : BaseComponent
     {
         private Transform _local = Transform.Identity();
-        private readonly Transform _world = Transform.Identity();
+        private  Transform _world = Transform.Identity();
 
         public TransformComponent(GameObject owner) : base(owner)
         {
@@ -15,12 +15,15 @@ namespace Game.Client.GameComponents.Classes.Components
         {
             _world.Clone(ref _local);
 
-            if (null != Owner.Parent && Owner.Parent.Components.TryGet<TransformComponent>(out var parentTransform))
-                _world.Position = _local.Position + parentTransform.World.Position;
+             if (null != Owner.Parent && Owner.Parent.Components.TryGet<TransformComponent>(out var parentTransform))
+               _world.Position = _local.Position + parentTransform.World.Position;
         }
-
-         Transform Local => _local;
-         Transform World => _world;
+        public ref Transform getrefofloc()
+        {
+            return ref _local;
+        }
+        public ref Transform Local => ref _local;
+        public ref Transform World => ref _world;
     }
 
     

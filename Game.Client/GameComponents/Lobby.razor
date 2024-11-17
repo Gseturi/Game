@@ -150,7 +150,8 @@
 
 
     }
-
+    int first = 0;
+    Gameinstance raime;
     [JSInvokable("GameLoop")]
     public async ValueTask GameLoop(float timeStamp, int ScreenWidh, int ScreenHeight)
     {
@@ -158,6 +159,11 @@
         inputSystem = InputSystem.Instance;
         await Update();
         await Render(ScreenWidh, ScreenHeight);
+        if(first==0){
+            raime= await StartGame();
+            first++;
+        }
+        await raime.Step();
         await InvokeAsync(StateHasChanged);
 
     }
@@ -165,13 +171,9 @@
     [JSInvokable]
     public async ValueTask KeyDown(int keyCode)
     {
-
+        Console.WriteLine("daechira");
         int keyvalue = 1;
-        // await _resolver.Load<Sprite>("Sprites/MachaPlayer.png");
-        // var machplayer = _resolver.Get<Sprite>("Sprites/MachaPlayer.png");
-        //  _BackGround = _resolver.Get<Sprite>("Sprites/temp.png").Source;
-        //_PlayerOne = _resolver.Get<Sprite>("Sprites/MachaPlayer.png").Source;
-        //_PlayerTwo = _resolver.Get<Sprite>("Sprites/PlayerGuram.png").Source;
+
 
         inputSystem.SetKeyState((Keys)keyCode, (ButtonState.States)keyvalue);
 
@@ -209,50 +211,20 @@
         }*/
         if (_CurrentPlayer.Equals(_PlayerOne))
         {
-
-            if (inputSystem.GetKeyState((Keys)Keys.Right).State == (ButtonState.States)1)
-            {
-                xx = xx + 1;
-
+            int one = 0;
+            if (one==0) {
+                await _hubConnection.InvokeAsync("Send", 200, 100);
+                one++;
             }
-            if (inputSystem.GetKeyState((Keys)Keys.Left).State == (ButtonState.States)1)
-            {
-                xx = xx - 1;
-
-            }
-            if (inputSystem.GetKeyState((Keys)Keys.Up).State == (ButtonState.States)1)
-            {
-                yy = yy - 1;
-            }
-            if (inputSystem.GetKeyState((Keys)Keys.Down).State == (ButtonState.States)1)
-            {
-                yy = yy + 1;
-
-            }
-            await _hubConnection.InvokeAsync("Send", xx, yy);
         }
         else if(_CurrentPlayer.Equals(_PlayerTwo))
         {
-            if (inputSystem.GetKeyState((Keys)Keys.Right).State == (ButtonState.States)1)
-            {
-                _x = _x + 1;
+            int one = 0;
 
+            if (one==0) {
+                await _hubConnection.InvokeAsync("Send", 100, 100);
+                one++;
             }
-            if (inputSystem.GetKeyState((Keys)Keys.Left).State == (ButtonState.States)1)
-            {
-                _x = _x - 1;
-
-            }
-            if (inputSystem.GetKeyState((Keys)Keys.Up).State == (ButtonState.States)1)
-            {
-                _y = _y - 1;
-            }
-            if (inputSystem.GetKeyState((Keys)Keys.Down).State == (ButtonState.States)1)
-            {
-                _y = _y + 1;
-
-            }
-            await _hubConnection.InvokeAsync("Send", _x, _y);
         }
 
 
@@ -265,8 +237,8 @@
             // await _outputCanvasContext.DrawImageAsync(_BackGround, 100, 100);
             await _outputCanvasContext.ClearRectAsync(0, 0, ScreenWidh, ScreenHeight);
             await _outputCanvasContext.DrawImageAsync(_BackGround, 0, 0, ScreenWidh / 2, ScreenHeight / 2);
-            await _outputCanvasContext.DrawImageAsync(_PlayerOne, _x, _y, ScreenWidh / 10, ScreenHeight / 10);
-            await _outputCanvasContext.DrawImageAsync(_PlayerTwo, xx, yy, ScreenWidh / 10, ScreenHeight / 10);
+            //  await _outputCanvasContext.DrawImageAsync(_PlayerOne, _x, _y, ScreenWidh / 10, ScreenHeight / 10);
+            //  await _outputCanvasContext.DrawImageAsync(_PlayerTwo, xx, yy, ScreenWidh / 10, ScreenHeight / 10);
             await InvokeAsync(StateHasChanged);
 
         }
@@ -330,36 +302,7 @@
                     MatchStart();
                     await InvokeAsync(StateHasChanged);
                 });
-                _hubConnection.On<int, int>("InfoRecived", async (x, y) =>
-                {
-
-                    try
-                    {
-                        Console.WriteLine("Braapchhh");
-                        if (_CurrentPlayer.Equals(_PlayerOne))
-                        {
-                            this._x = x;
-                            this._y = y;
-                        }
-                        else
-                        {
-                            if (this._x == this.xx && this._y == this.yy)
-                            {
-
-                            }
-
-
-
-                            this.xx = x;
-                            this.yy = y;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error in event handler: {ex.Message}");
-                    }
-
-                });
+             
             }
         }
         catch (Exception ex)
@@ -382,11 +325,23 @@
 
     }
 
-    public async ValueTask StartGame()
+    internal async Task<Gameinstance> StartGame()
     {
-        var _game = await Gameinstance.Create(_outputCanvasContext,_resolver,_hubConnection);
+        string cur;
+        if (_CurrentPlayer.Equals(_PlayerOne))
+        {
+            cur = "mach";
+        }
+        else
+        {
+            cur = "guram";
+        }
         
+        Console.WriteLine("Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"+cur);
 
+        var _game = await Gameinstance.Create(_outputCanvasContext,_resolver,_hubConnection,cur);
+
+        return _game;
 
     }
 

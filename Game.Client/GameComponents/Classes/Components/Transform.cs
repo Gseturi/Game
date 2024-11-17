@@ -6,6 +6,7 @@ namespace Game.Client.GameComponents.Classes.Components
     {
         public Vector2 Position;
 
+        
         public Vector2 Scale;
 
         public Vector2 Direction;
@@ -19,7 +20,10 @@ namespace Game.Client.GameComponents.Classes.Components
             this.Direction = source.Direction;
             this.Rotation = source.Rotation;
         }
-
+        public ref Vector2 GetPositionref()
+        {
+            return ref Position;
+        }
         public static Transform Identity() => new Transform()
         {
             Position = Vector2.Zero,

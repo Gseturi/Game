@@ -16,11 +16,7 @@ namespace Game.Client.GameComponents.Classes
         {
             if (null == Root)
                 return;
-            if(Root is Ihubable hubable)
-            { 
-                await hubable.Update(game, hubConnection);
-
-            }
+         
 
             await Root.Update(game);
         }
